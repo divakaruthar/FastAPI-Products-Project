@@ -1,10 +1,20 @@
 from fastapi import Depends,FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from models import Product
 from database import session, engine
 import database_models
 from sqlalchemy.orm import Session
 
 app = FastAPI()
+
+# CORS for React dev server
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 database_models.Base.metadata.create_all(bind=engine)
 
@@ -40,13 +50,13 @@ def init_db():
 
 init_db()
 
-@app.get("/products")
+@app.get("/products/")
 def get_all_products(db: Session = Depends(get_db)):
     db_products = db.query(database_models.Product).all()
     return db_products
     # return products
 
-@app.get("/product/{id}")
+@app.get("/products/{id}")
 def get_product_by_id(id: int, db: Session = Depends(get_db)):
     # for product in products:
     #     if product.id == id:
@@ -57,7 +67,7 @@ def get_product_by_id(id: int, db: Session = Depends(get_db)):
         return db_product
     return "Product Not Found"
 
-@app.post("/product")
+@app.post("/products/")
 def add_product(product: Product, db: Session = Depends(get_db)):  
     # products.append(product)
     db.add(database_models.Product(**product.model_dump()))
@@ -65,7 +75,7 @@ def add_product(product: Product, db: Session = Depends(get_db)):
     return product
 
 
-@app.put("/product")
+@app.put("/products/{id}")
 def update_product(id: int, product: Product, db: Session = Depends(get_db)):
     # for i in range(len(products)):
     #     if products[i].id == id:
@@ -85,7 +95,7 @@ def update_product(id: int, product: Product, db: Session = Depends(get_db)):
     return "No Product Found"
 
 
-@app.delete("/product")
+@app.delete("/products/{id}")
 def delete_product(id: int, db: Session = Depends(get_db)):
     # for i in range(len(products)):
     #     if products[i].id == id:
